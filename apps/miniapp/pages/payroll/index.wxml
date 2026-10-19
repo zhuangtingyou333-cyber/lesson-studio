@@ -1,0 +1,41 @@
+<view class="page">
+ <view class="title">{{detail?'月度课酬':'教师课酬'}}</view><view class="subtitle">{{detail?detail.teacherName+' · '+detail.month:'让每笔课酬都有计算依据'}}</view>
+ <view wx:if="{{error}}" class="error">{{error}}</view><view wx:if="{{notice}}" class="notice">{{notice}}</view>
+ <button id="payroll-reload" class="secondary" bindtap="reload" disabled="{{busy}}">重新加载记录</button>
+ <block wx:if="{{ready && !detail}}">
+  <view wx:if="{{owner}}" class="card">
+   <view class="card-title">生成月度草稿</view><view class="label">授课老师</view><picker range="{{overview.teachers}}" range-key="name" value="{{teacherIndex}}" data-key="teacherIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{overview.teachers[teacherIndex].name||'暂无老师'}}{{overview.teachers[teacherIndex].active?'':'（已停用）'}}</view></picker>
+   <view class="label">账期</view><picker mode="date" fields="month" value="{{month}}" data-key="month" bindchange="pick" disabled="{{busy}}"><view class="picker">{{month}}</view></picker>
+   <button id="payroll-calculate" bindtap="calculate" disabled="{{busy || !overview.teachers.length}}" loading="{{busy}}">计算 / 查看账期</button>
+   <button id="payroll-rules" class="text-button" bindtap="toggleRule" disabled="{{busy}}">{{ruleOpen?'收起规则设置':'配置所选老师的课酬规则'}}</button>
+   <form wx:if="{{ruleOpen}}" id="payroll-rule-form" bindsubmit="saveRule">
+    <view class="label">课程</view><picker range="{{overview.courses}}" range-key="name" value="{{courseIndex}}" data-key="courseIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{overview.courses[courseIndex].name||'暂无课程'}}</view></picker><view class="muted">{{ruleSummary}}</view>
+    <view class="label">新版本生效日期</view><picker mode="date" value="{{effectiveFrom}}" data-key="effectiveFrom" bindchange="pick" disabled="{{busy}}"><view class="picker">{{effectiveFrom}}</view></picker>
+    <view class="label">计酬方式</view><picker range="{{modes}}" value="{{modeIndex}}" data-key="modeIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{modes[modeIndex]}}</view></picker><view class="muted">按课次：有计酬学员时每节课计一次；按人数：按计酬学员数计算。</view>
+    <view class="label">单价（元）</view><input name="rate" type="digit" value="{{rate}}" placeholder="例如 50.00" disabled="{{busy}}"/>
+    <view class="row line"><text class="grow">缺席计入课酬</text><switch checked="{{countAbsent}}" data-key="countAbsent" bindchange="toggle" disabled="{{busy}}" color="#007aff"/></view>
+    <view class="row line"><text class="grow">补课计入课酬</text><switch checked="{{countMakeup}}" data-key="countMakeup" bindchange="toggle" disabled="{{busy}}" color="#007aff"/></view>
+    <view class="muted">请假和取消不计酬。学员是否扣课，与老师是否计酬分别核对。</view><view class="label">规则调整原因</view><input name="reason" maxlength="300" placeholder="例如：核对本学期课酬约定" disabled="{{busy}}"/>
+    <button form-type="submit" disabled="{{busy || !overview.courses.length}}">保存规则版本</button>
+   </form>
+  </view>
+  <view class="section-label">月度账期</view><view wx:if="{{!periods.length}}" class="empty">{{owner?'先配置老师与课程的规则，再生成月度草稿。':'暂未生成你的课酬账期，请联系管理员核对。'}}</view>
+  <view wx:for="{{periods}}" wx:key="id" class="card"><view class="row"><view class="grow card-title">{{item.teacherName}} · {{item.month}}</view><text class="pill">{{item.label}}</text></view><view class="number">¥{{item.money}}</view><view class="muted">应计金额 · 未进行转账</view><button class="secondary" data-id="{{item.id}}" bindtap="open">核对明细</button></view>
+  <button wx:if="{{cursor}}" class="secondary" bindtap="more" disabled="{{busy}}">加载更早账期</button>
+  <view wx:if="{{pending.length}}" class="section-label">待结算调整</view><view wx:for="{{pending}}" wx:key="id" class="card"><view class="row"><view class="grow card-title">{{item.teacherName}} · {{item.courseName}}</view><text class="positive">{{item.money}}元</text></view><view class="muted">原账期 {{item.sourceMonth}} · {{item.eligibleMonth}}起可结算</view><view class="line">{{item.reason}}</view><button class="secondary" data-id="{{item.sourcePeriodId}}" bindtap="open">查看原账期</button></view>
+ </block>
+ <block wx:if="{{ready && detail}}">
+  <view class="card"><view class="row"><view class="card-title">应计课酬</view><text class="pill">{{detail.status==='frozen'?'已冻结':'草稿'}}</text></view><view class="number">¥{{total}}</view><view class="muted">本期课次 {{base}}元 · 历史调整 {{adjustment}}元</view><view class="muted">计算于 {{calculated}}{{frozen?' · 冻结于 '+frozen:''}}</view><view wx:if="{{detail.freezeReason}}" class="line">审核：{{detail.freezeReason}}</view></view>
+  <view wx:if="{{detail.stale}}" class="error">点名、规则或调整项已变化。当前为旧草稿，请重新计算后审核或导出。</view><view wx:if="{{detail.blockers.length}}" class="notice"><view class="card-title">待处理事项</view><view wx:for="{{detail.blockers}}" wx:key="*this">{{item}}</view></view>
+  <button wx:if="{{owner && detail.status==='draft'}}" id="payroll-recalculate" class="secondary" bindtap="recalculate" disabled="{{busy}}">重新计算草稿</button>
+  <form wx:if="{{owner && detail.canFreeze}}" id="payroll-freeze-form" class="card" bindsubmit="freeze"><view class="card-title">审核并冻结</view><view class="muted">请核对全部{{detail.totalRows}}条明细。冻结后原账只读，点名更正会进入后续调整。</view><view class="label">审核原因</view><input name="reason" maxlength="300" placeholder="填写本次核对结果" disabled="{{busy}}"/><button form-type="submit" disabled="{{busy}}">确认冻结账期</button></form>
+  <view class="section-label">共{{detail.totalRows}}条 · 第{{detail.page}} / {{detail.totalPages}}页</view>
+  <view wx:for="{{rows}}" wx:key="key" class="card"><view class="row"><view class="grow card-title">{{item.courseName}}</view><text class="pill">{{item.kind==='lesson'?'本期课次':'历史调整'}}</text></view><view class="muted">{{item.time}} · {{item.room}}</view><view class="number">¥{{item.money}}</view><view class="muted">{{item.formula}}</view><view wx:if="{{item.deltaText}}" class="muted">{{item.deltaText}}</view><view wx:if="{{item.note}}" class="line">{{item.note}}</view>
+   <view class="actions"><button class="small secondary" data-id="{{item.key}}" bindtap="expand">{{expanded===item.key?'收起出勤依据':'查看出勤依据'}}</button><button class="small secondary" data-id="{{item.lessonId}}" bindtap="lesson">查看课次</button></view><view wx:if="{{expanded===item.key}}" class="basis">{{item.basis||'没有预约学员'}}</view>
+  </view>
+  <view wx:if="{{!rows.length}}" class="empty">本账期没有课次或待结算调整。</view>
+  <view class="actions"><button class="small secondary" data-step="-1" bindtap="page" disabled="{{busy || detail.page<=1}}">上一页</button><button class="small secondary" data-step="1" bindtap="page" disabled="{{busy || detail.page>=detail.totalPages}}">下一页</button></view>
+  <button id="payroll-export" class="secondary" bindtap="report" disabled="{{busy || detail.stale}}">导出全部{{detail.totalRows}}条明细</button><button class="text-button" bindtap="back" disabled="{{busy}}">返回课酬列表</button>
+ </block>
+ <view class="notice">课酬为机构内部核对记录。冻结和导出均不代表工资已发放。</view>
+</view>
