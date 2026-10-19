@@ -1,0 +1,50 @@
+{
+  "name": "lesson-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch apps/api/main.ts",
+    "dev:tools": "tsx scripts/dev.ts",
+    "dev:api": "tsx watch apps/api/main.ts",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && tsc -p apps/miniapp/tsconfig.json && tsx scripts/build-miniapp.ts && vite build",
+    "build:miniapp": "tsc -p apps/miniapp/tsconfig.json && tsx scripts/build-miniapp.ts",
+    "check:miniapp": "tsx scripts/check-miniapp.ts",
+    "mini:ide": "node scripts/wechatide.mjs",
+    "test": "tsx --test --test-concurrency=1 apps/api/tests/*.test.ts",
+    "start": "tsx apps/api/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@nestjs/common": "12.1.0",
+    "@nestjs/core": "12.1.0",
+    "@nestjs/platform-express": "12.1.0",
+    "exceljs": "4.4.0",
+    "express": "5.2.1",
+    "lucide-react": "1.48.0",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "esbuild": "0.28.2",
+    "miniprogram-api-typings": "5.2.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.1"
+  }
+}
