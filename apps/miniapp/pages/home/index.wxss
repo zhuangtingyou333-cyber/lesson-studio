@@ -1,0 +1,6 @@
+.home-header { align-items: flex-start; margin-bottom: 32rpx; }
+.page button.account-button { width: auto; flex-shrink: 0; margin: 12rpx 0 0; padding: 18rpx 22rpx; min-height: 80rpx; background: #e8f1ff; color: #0066cc; font-size: 26rpx; border-radius: 40rpx; }
+.greeting { margin: 12rpx 0 0; font-size: 34rpx; font-weight: 600; }
+.next-title { font-size: 36rpx; font-weight: 600; margin: 22rpx 0 8rpx; }
+.demo-roles button { margin: 0; }
+.upcoming { margin-top: 24rpx; }

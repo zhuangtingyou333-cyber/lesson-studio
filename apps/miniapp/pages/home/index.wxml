@@ -1,0 +1,24 @@
+<view class="page home">
+  <view class="row home-header"><view class="grow"><view class="title">{{ready?'工作台':'课间'}}</view><view class="subtitle">{{ready?tenantName:'把时间留给每一堂好课'}}</view></view><button id="open-account" class="account-button" bindtap="account" aria-label="账号与机构">账户</button></view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{!ready}}" class="card">
+    <view class="card-title">{{hasIdentity?'选择你的机构':'欢迎使用课间'}}</view><view class="muted">课程、学员与课时，都在微信里管理。</view>
+    <button wx:if="{{hasIdentity || wechatEnabled}}" bindtap="account">{{hasIdentity?'选择机构':'微信登录'}}</button>
+    <block wx:if="{{demoEnabled}}"><view class="section-label">本机体验 · 合成数据</view><button data-role="owner" bindtap="enter" loading="{{busy}}" disabled="{{busy}}">以管理员身份体验</button><view class="actions demo-roles"><button class="secondary grow" data-role="teacher" bindtap="enter" disabled="{{busy}}">授课老师</button><button class="secondary grow" data-role="guardian" bindtap="enter" disabled="{{busy}}">学员家长</button></view></block>
+  </view>
+  <block wx:else>
+    <view class="row greeting"><view class="grow">{{name}}，你好</view><text class="pill">{{roleLabel}}</text></view>
+    <view class="stats"><view class="card"><view class="muted">{{role==='guardian'?'关联学员':'可见学员'}}</view><view class="number">{{studentCount}}</view><view class="muted">人</view></view><view class="card"><view class="muted">可用课时</view><view class="number">{{available}}</view><view class="muted">次</view></view></view>
+    <view class="card upcoming"><view class="row"><view class="card-title">接下来的课程</view><text class="muted">{{nextTime}}</text></view><view class="next-title">{{nextTitle||'暂时没有待上课程'}}</view><view class="muted">{{nextDetail||'可以前往课程页查看或安排课程'}}</view><button id="open-courses" bindtap="courses">{{role==='guardian'?'查看课程与预约':'查看课程与点名'}}</button></view>
+    <view class="section-label">{{role==='owner'?'机构管理':'常用功能'}}</view>
+    <view class="group">
+      <button id="open-catalog" wx:if="{{role==='owner'}}" class="nav-row" bindtap="catalog"><text class="nav-icon">课</text><view class="grow">课程与场地<text class="nav-detail">课程、课包和教室资料</text></view><text class="chevron">›</text></button>
+      <button id="open-classes" class="nav-row" bindtap="classes"><text class="nav-icon">班</text><view class="grow">班级与名单<text class="nav-detail">{{role==='owner'?'管理班级，安排周期课程':'查看负责或参与的班级'}}</text></view><text class="chevron">›</text></button>
+      <button id="open-payroll" wx:if="{{role!=='guardian'}}" class="nav-row" bindtap="payroll"><text class="nav-icon">酬</text><view class="grow">教师课酬<text class="nav-detail">{{role==='owner'?'月度核算、审核与更正':'查看自己的课酬与明细'}}</text></view><text class="chevron">›</text></button>
+      <button id="open-members" wx:if="{{role==='owner'}}" class="nav-row" bindtap="members"><text class="nav-icon">人</text><view class="grow">成员与邀请<text class="nav-detail">老师加入、家长绑定与权限</text></view><text class="chevron">›</text></button>
+    </view>
+    <view class="section-label">请假与补课</view><view class="group"><button id="open-leaves" class="nav-row" bindtap="leaves"><text class="nav-icon">假</text><view class="grow">请假记录<text class="nav-detail">{{pendingLeaves?pendingLeaves+'项申请待审批':'查看申请、审批结果与处理记录'}}</text></view><text class="chevron">›</text></button></view><view wx:if="{{!makeups.length}}" class="empty">暂无待安排的补课</view><view wx:for="{{makeups}}" wx:key="id" class="card"><view class="row"><view class="grow"><view class="card-title">{{item.student_name}} · {{item.course_name}}</view><view class="muted">{{item.expiry}} 到期</view><view class="muted">{{item.billing_mode==='prepaid'?'原课已扣，补课不重复扣':'补课到课时扣课'}}</view></view><text class="pill">{{item.label}}</text></view><button wx:if="{{item.state==='available' && !item.expired && role!=='teacher'}}" class="secondary" data-id="{{item.id}}" bindtap="makeup">安排补课</button></view>
+    <button id="sign-out" class="text-button" bindtap="signOut">切换体验身份</button>
+  </block>
+  <view class="notice">本机开发体验 · 数据保存在本机。正式微信登录、在线支付和消息推送尚未启用。</view>
+</view>
