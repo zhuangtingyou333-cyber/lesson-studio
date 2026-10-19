@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="title">调整课程</view><view class="subtitle">先看影响范围，再确认变更</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view><view wx:if="{{!ready || !owner}}" class="notice">请使用机构管理员身份管理课程。</view>
+  <block wx:else>
+    <view wx:if="{{result}}" id="change-result" class="card"><view class="card-title">已完成</view><view>{{result}}</view><view class="notice">通知尚未接通，请自行告知学员。</view><button id="change-detail" bindtap="detail">查看课次记录</button><button class="secondary" bindtap="courses">返回课程安排</button></view>
+    <view wx:if="{{!result}}" class="notice">基准课次：{{lesson.class_name||lesson.course_name}} · {{anchor}}。已开始或有点名历史的课程不可调整。</view>
+    <form wx:if="{{!result}}" id="change-form" class="card" bindsubmit="previewChange">
+      <view class="label">操作</view><picker id="change-action" range="{{actions}}" value="{{actionIndex}}" data-key="actionIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{actions[actionIndex]}}</view></picker>
+      <view class="label">影响范围</view><picker wx:if="{{lesson.series_id}}" id="change-scope" range="{{scopes}}" value="{{scopeIndex}}" data-key="scopeIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{scopes[scopeIndex]}}</view></picker><view wx:else class="picker">仅这一节（非周期课）</view>
+      <block wx:if="{{scopeIndex===2}}"><view class="label">原课次日期范围（包含首尾日期）</view><picker mode="date" value="{{fromDate}}" data-key="fromDate" bindchange="pick" disabled="{{busy}}"><view class="picker">{{fromDate}}</view></picker><picker mode="date" value="{{toDate}}" data-key="toDate" bindchange="pick" disabled="{{busy}}"><view class="picker">{{toDate}}</view></picker></block>
+      <block wx:if="{{actionIndex===0}}">
+        <view class="label">基准课次调整到</view><picker mode="date" value="{{date}}" data-key="date" bindchange="pick" disabled="{{busy}}"><view class="picker">{{date}}</view></picker><picker mode="time" value="{{time}}" data-key="time" bindchange="pick" disabled="{{busy}}"><view class="picker">{{time}}</view></picker>
+        <view wx:if="{{scopeIndex!==0}}" class="notice">所选课次的日期平移相同天数，开始时间统一为上方时刻，各节时长保持原样。提交前逐节核对。</view>
+        <view class="label">授课老师</view><picker range="{{teachers}}" range-key="name" value="{{teacherIndex}}" data-key="teacherIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{teachers[teacherIndex].name}}</view></picker>
+        <view class="label">统一新教室</view><picker id="change-room" range="{{rooms}}" range-key="name" value="{{roomIndex}}" data-key="roomIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{rooms[roomIndex].name}}</view></picker>
+        <view class="label">统一人数上限（留空保留原值）</view><input name="capacity" value="{{capacity}}" data-key="capacity" bindinput="input" type="number" disabled="{{busy}}"/>
+      </block>
+      <view wx:else class="notice">取消后释放名额，已占用的补课资格恢复可安排。原请假资格保留；不会退款或改变课时余额。已取消的课次保持原记录。</view>
+      <view class="label">变更原因（必填，关联家长可见）</view><input id="change-reason" name="reason" value="{{reason}}" data-key="reason" bindinput="input" maxlength="300" placeholder="例如：教室维修，顺延一周" disabled="{{busy}}"/>
+      <button id="change-preview" form-type="submit" disabled="{{busy}}" loading="{{busy}}">预览影响范围</button>
+    </form>
+    <block wx:if="{{preview}}">
+      <view class="spacer card-title">{{preview.rows.length}}节课程 · {{preview.affectedBookings}}条预约</view>
+      <view class="notice">{{preview.canCommit?'可以提交，保存时会重新校验。':'仍有冲突，本批不会部分保存。'}}{{preview.releasedMakeups?'将释放'+preview.releasedMakeups+'份补课资格。':''}}通知尚未接通，请自行告知受影响学员。</view>
+      <view wx:for="{{preview.rows}}" wx:key="id" class="card"><view class="card-title">{{item.title}}</view><view class="muted">原安排</view><view>{{item.beforeLabel}}</view><view class="label">调整后</view><view class="positive">{{item.afterLabel}}</view><view class="line muted">预约学员：{{item.studentNames}}</view><view wx:for="{{item.conflicts}}" wx:for-item="conflict" wx:key="*this" class="error">{{conflict}}</view></view>
+      <view wx:if="{{preview.unchanged.length}}" class="notice">另有{{preview.unchanged.length}}节已取消或设置未改变，保持原记录。</view>
+      <button id="change-commit" bindtap="commit" disabled="{{busy || !preview.canCommit}}" loading="{{busy}}">确认{{preview.input.action==='cancel'?'取消':'调整'}}全部{{preview.rows.length}}节</button>
+    </block>
+  </block>
+</view>
