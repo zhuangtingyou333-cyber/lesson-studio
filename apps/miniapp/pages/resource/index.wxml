@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="title">{{title}}</view><view class="subtitle">{{id?draft.name:'添加新资料'}}</view>
+  <view wx:if="{{error}}" class="error">{{error}}<button class="small secondary" bindtap="reload" disabled="{{busy}}">重新加载资料（放弃草稿）</button></view>
+  <view wx:if="{{!ready || !owner}}" class="notice">请使用机构管理员身份维护资料。</view>
+  <block wx:else>
+    <view wx:if="{{result}}" class="card"><view class="card-title">已完成</view><view>{{result}}</view><button id="resource-back" bindtap="back">返回列表</button><button class="secondary" bindtap="reload">继续编辑</button></view>
+    <block wx:else>
+      <view wx:if="{{!active}}" class="notice">{{kind==='room'?'教室已停用':'资料已归档'}}。历史记录保留；恢复后可以继续编辑。</view>
+      <form wx:if="{{active}}" id="resource-form" class="card" bindsubmit="save">
+        <view class="label">名称</view><input id="resource-name" name="name" value="{{draft.name}}" data-key="name" bindinput="input" maxlength="80" disabled="{{busy}}"/>
+        <block wx:if="{{kind==='student'}}"><view class="label">联系方式（选填）</view><input name="phone" value="{{draft.phone}}" data-key="phone" bindinput="input" maxlength="24" disabled="{{busy}}"/><view class="label">备注（选填）</view><textarea name="note" value="{{draft.note}}" data-key="note" bindinput="input" maxlength="500" disabled="{{busy}}"/></block>
+        <block wx:if="{{kind==='course'}}"><view class="label">每堂时长（分钟）</view><input name="duration" value="{{draft.duration}}" data-key="duration" bindinput="input" type="number" disabled="{{busy}}"/><view class="label">每堂扣课（次）</view><input name="debit" value="{{draft.debit}}" data-key="debit" bindinput="input" type="digit" disabled="{{busy}}"/><view class="notice">时长和扣课量只用于之后排课，已排课次不随模板改变。</view></block>
+        <block wx:if="{{kind==='package'}}"><view class="label">适用课程</view><picker id="resource-course" range="{{courses}}" range-key="label" value="{{courseIndex}}" bindchange="pick" disabled="{{busy}}"><view class="picker">{{courses[courseIndex].label||'请先新增课程'}}</view></picker><view class="label">购买次数</view><input name="purchased" value="{{draft.purchased}}" data-key="purchased" bindinput="input" type="digit" disabled="{{busy}}"/><view class="label">赠送次数</view><input name="gift" value="{{draft.gift}}" data-key="gift" bindinput="input" type="digit" disabled="{{busy}}"/><view class="label">参考价格（元）</view><input name="price" value="{{draft.price}}" data-key="price" bindinput="input" type="digit" disabled="{{busy}}"/><view class="label">有效期（天）</view><input name="validDays" value="{{draft.validDays}}" data-key="validDays" bindinput="input" type="number" disabled="{{busy}}"/><view class="notice">保存为新版本，仅用于之后开通。已售课包的次数、赠送、适用课程和到期日不变。</view></block>
+        <block wx:if="{{kind==='room'}}"><view class="label">教室容量（人）</view><input id="resource-capacity" name="capacity" value="{{draft.capacity}}" data-key="capacity" bindinput="input" type="number" disabled="{{busy}}"/><view class="notice">排课人数不能超过教室容量。降低容量前须先调整不符合要求的未结束课程。更名后仍按同一教室检查冲突，已排课次保留原名称。</view></block>
+        <button id="resource-save" form-type="submit" disabled="{{busy}}" loading="{{busy}}">保存{{title}}</button>
+      </form>
+      <button wx:if="{{id}}" id="resource-active" class="secondary" bindtap="setActive" disabled="{{busy}}">{{active?(kind==='room'?'停用教室':'归档'+title):'恢复'+title}}</button>
+    </block>
+  </block>
+</view>
