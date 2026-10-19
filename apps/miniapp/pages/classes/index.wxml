@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="title">班级与名单</view><view class="subtitle">固定班级，安排每周的好课</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{!ready}}" class="notice">请先在工作台选择体验身份，或返回后重试。</view>
+  <block wx:else>
+    <view class="actions"><button wx:if="{{owner}}" id="class-new" class="small" bindtap="edit" disabled="{{busy}}">新建班级</button><button class="small secondary" bindtap="archiveFilter">{{showArchived?'隐藏归档':'显示归档'}}</button></view>
+    <form wx:if="{{editing && owner}}" id="class-form" class="card" bindsubmit="save">
+      <view class="card-title">{{id?'编辑班级':'新建班级'}}</view>
+      <view class="label">班级名称</view><input id="class-name" name="name" value="{{name}}" maxlength="80" placeholder="例如：周六素描提高班" disabled="{{busy}}"/>
+      <view class="label">课程</view><picker id="class-course" range="{{courses}}" range-key="name" value="{{courseIndex}}" data-key="courseIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{courses[courseIndex].name||'请先添加课程'}}</view></picker>
+      <view class="label">授课老师</view><picker range="{{teachers}}" range-key="name" value="{{teacherIndex}}" data-key="teacherIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{teachers[teacherIndex].name||'暂无老师'}}</view></picker>
+      <view class="label">教室</view><picker id="class-room" range="{{rooms}}" range-key="label" value="{{roomIndex}}" data-key="roomIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{rooms[roomIndex].label||'请先创建教室'}} · 容量{{rooms[roomIndex].capacity}}人</view></picker>
+      <view class="label">人数上限</view><input name="capacity" type="number" value="{{capacity}}" disabled="{{busy}}"/>
+      <view class="label">班级学员 · 已选 {{studentIds.length}} 人</view>
+      <checkbox-group id="class-members" bindchange="members"><label wx:for="{{students}}" wx:key="id" wx:if="{{item.active || item.selected}}" class="line row"><checkbox value="{{item.id}}" checked="{{item.selected}}" disabled="{{busy}}" color="#007aff"/><text class="grow">{{item.name}}{{item.active?'':'（已归档，请从新排课名单移除）'}}</text></label></checkbox-group>
+      <view wx:if="{{!students.length}}" class="empty">暂无学员，请先在「学员」建档。</view>
+      <view class="notice">名单、老师和教室的更改只用于之后排课。已排课次及其预约不会跟随改变；已有课次的班级不能更换课程。</view>
+      <button id="class-save" form-type="submit" disabled="{{busy}}" loading="{{busy}}">保存班级</button><button class="secondary" bindtap="close" disabled="{{busy}}">取消编辑</button>
+    </form>
+    <view wx:for="{{visibleClasses}}" wx:key="id" class="card">
+      <view class="row"><view class="card-title grow">{{item.name}}</view><text class="pill">{{item.active?'使用中':'已归档'}}</text></view>
+      <view class="muted">{{item.course_name}} · {{item.teacher_name}} · {{item.room}}</view><view class="muted">{{owner?'班级人数上限：'+item.capacity+'人':''}}</view>
+      <view class="line">{{item.memberNames||'暂无可见学员'}}</view>
+      <view wx:if="{{owner}}" class="actions"><button wx:if="{{item.active}}" class="small" data-id="{{item.id}}" bindtap="schedule">周期排课</button><button wx:if="{{item.active}}" class="small secondary" data-id="{{item.id}}" bindtap="edit" disabled="{{busy}}">编辑名单</button><button class="small secondary" data-id="{{item.id}}" bindtap="setActive" disabled="{{busy}}">{{item.active?'归档':'恢复'}}</button></view>
+    </view>
+    <view wx:if="{{!visibleClasses.length}}" class="empty">暂无可见班级</view>
+  </block>
+</view>
