@@ -1,0 +1,2 @@
+#import-text { height: 320rpx; margin-top: 24rpx; font-size: 25rpx; }
+.summary { white-space: pre-wrap; line-height: 1.9; }

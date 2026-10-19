@@ -1,0 +1,31 @@
+<view class="page">
+ <view class="title">名单与课时迁入</view><view class="subtitle">先核对，再入账。旧余额不算新收入。</view>
+ <view wx:if="{{error}}" class="error">{{error}}<button wx:if="{{batch}}" class="secondary small" bindtap="reload" disabled="{{busy}}">重新加载批次（放弃本页修改）</button></view><view wx:if="{{notice}}" class="notice">{{notice}}</view>
+ <view wx:if="{{!ready || !owner}}" class="notice">请以机构管理员身份进入。</view>
+ <block wx:else>
+  <block wx:if="{{!batch}}">
+   <view class="card"><view class="card-title">导入现有资料</view><view class="muted">支持.xlsx、UTF-8 CSV、TSV，每张表最多1000行、文件2MB。首行是列名。不会自动跳过错误行。</view><button id="choose-import" bindtap="choose" disabled="{{busy}}" loading="{{busy}}">从微信文件中选择</button><button class="secondary" bindtap="template" disabled="{{busy}}">获取空白模板</button></view>
+   <view class="section-label">也可以粘贴表格</view><view class="card"><view class="muted">从表格复制列名和数据，或粘贴CSV文本。</view><textarea id="import-text" value="{{fileText}}" data-key="fileText" bindinput="input" maxlength="-1" disabled="{{busy}}" placeholder="原学员编号,姓名,…"/><button id="parse-import" bindtap="paste" disabled="{{busy}}">读取并设置列</button><button id="import-sample" class="secondary" bindtap="sample" disabled="{{busy}}">填入合成示例</button></view>
+   <view class="section-label">导入记录</view><view wx:if="{{!batches.length}}" class="empty">还没有导入记录</view><view class="group"><button wx:for="{{batches}}" wx:key="id" class="nav-row" data-id="{{item.id}}" bindtap="open" disabled="{{busy}}"><view class="grow">{{item.file_name}}<text class="nav-detail">{{item.worksheet}} · {{item.statusLabel}}</text></view><text class="chevron">›</text></button></view><button wx:if="{{cursor}}" class="secondary" bindtap="more" disabled="{{busy}}">更多记录</button>
+  </block>
+  <block wx:else>
+   <button class="text-button" bindtap="back" disabled="{{busy}}">‹ 返回导入记录</button>
+   <view class="card"><view class="card-title">{{batch.file_name}}</view><view class="muted">共{{batch.sheets.length}}张表，仅导入所选的一张；选择另一张表会打开其独立批次。导入后保留原始行号和来源。</view>
+    <view class="label">选择工作表</view><picker range="{{batch.sheets}}" range-key="name" value="{{sheetIndex}}" data-key="sheetIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{batch.sheets[sheetIndex].name}} · {{batch.sheets[sheetIndex].rows}}行</view></picker>
+    <block wx:if="{{batch.status!=='completed'}}">
+     <view class="label">导入内容</view><picker range="{{kinds}}" value="{{kindIndex}}" data-key="kindIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{kinds[kindIndex]}}</view></picker>
+     <view class="label">原系统或来源名称</view><input value="{{sourceName}}" maxlength="80" data-key="sourceName" bindinput="input" disabled="{{busy}}"/>
+     <view class="notice">同一原系统请保持来源名称一致。原学员编号区分身份，原课包编号防止重复入账；不能用姓名或手机号代替编号。联系方式和编号在Excel中请设为文本。</view>
+     <view class="card-title">对应表格中的列</view><view wx:for="{{mappingFields}}" wx:key="key"><view class="label">{{item.label}}{{item.required?' *':''}}</view><picker range="{{columns}}" value="{{item.index}}" data-field="{{item.key}}" bindchange="mapColumn" disabled="{{busy}}"><view class="picker">{{columns[item.index]}}</view></picker></view>
+     <button id="validate-import" bindtap="validate" disabled="{{busy}}" loading="{{busy}}">{{batch.previewHash?'重新校验并预览':'校验并预览'}}</button>
+    </block>
+    <block wx:else><view class="pill">整批迁入已完成</view><view class="muted spacer">以下为迁入时的核对记录。后续扣课、到期后的当前余额，请查看学员档案。</view></block>
+   </view>
+   <view wx:if="{{batch.summary}}" id="import-summary" class="card"><view class="card-title">{{batch.status==='completed'?'迁入结果':'核对汇总'}}</view><text class="summary">{{summaryText}}</text><view class="notice">到期日按北京时间当日结束计算。历史收款和已消课不从剩余余额推算，迁入不产生新收入。</view><button wx:if="{{batch.status==='ready'}}" id="commit-import" bindtap="commit" disabled="{{busy || dirty}}">确认整批迁入</button><view wx:if="{{batch.status==='invalid'}}" class="error">存在错误，整批不能入账。请修改原表或核对关联后重新预览。</view><button class="secondary" bindtap="report" disabled="{{busy}}">导出全部行核对表</button></view>
+   <view wx:if="{{resolveKey}}" id="import-resolution" class="card"><view class="card-title">核对学员：{{resolveName}}</view><view class="muted">此选择会应用于同一原学员编号的所有行。已有档案不会被覆盖。</view><picker range="{{targetOptions}}" value="{{targetIndex}}" bindchange="target" disabled="{{busy}}"><view class="picker">{{targetOptions[targetIndex]}}</view></picker><button id="save-import-target" bindtap="saveTarget" disabled="{{busy}}">保存关联选择</button></view>
+   <view wx:if="{{batch.totalRows}}" class="section-label">逐行核对 · 第{{batch.page}}/{{batch.totalPages}}页 · 共{{batch.totalRows}}行</view>
+   <view wx:for="{{rows}}" wx:key="line" class="card"><view class="row"><view class="card-title grow">第{{item.line}}行 · {{item.name||'未填姓名'}}</view><text class="pill">{{config.kind==='students'?'仅建档':item.quantity+'次'}}</text></view><view class="muted">编号：{{item.studentKey}}</view><view class="muted">联系方式：{{item.phone||'未提供'}}</view><view wx:if="{{item.note}}" class="muted">备注：{{item.note}}</view><block wx:if="{{config.kind==='opening'}}"><view class="muted">{{item.courseName}} · {{item.packageName}}</view><view class="muted">付费{{item.paid}}次 + 赠送{{item.bonus}}次 · {{item.expiry||'日期无效'}}到期</view></block><view wx:if="{{item.errorsText}}" class="error">{{item.errorsText}}</view><view wx:if="{{item.warningsText}}" class="notice">{{item.warningsText}}</view><view wx:if="{{!item.errorsText}}" class="muted">{{batch.status==='completed'?'已导入':(item.targetId?'关联已有学员':'创建新学员')}}</view><button wx:if="{{batch.status!=='completed' && item.needsResolution}}" class="secondary small" data-key="{{item.studentKey}}" data-name="{{item.name}}" bindtap="resolve" disabled="{{busy}}">核对学员身份</button></view>
+   <view wx:if="{{batch.totalPages>1}}" class="actions"><button class="secondary grow" data-step="-1" bindtap="page" disabled="{{busy || batch.page<=1}}">上一页</button><button class="secondary grow" data-step="1" bindtap="page" disabled="{{busy || batch.page>=batch.totalPages}}">下一页</button></view>
+  </block>
+ </block>
+</view>
