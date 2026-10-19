@@ -1,0 +1,9 @@
+{
+  "description": "课间本机体验；需启动本机API；未接入正式微信身份",
+  "projectname": "lesson-studio-local",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "setting": { "es6": true, "minified": true },
+  "packOptions": { "ignore": [] }
+}

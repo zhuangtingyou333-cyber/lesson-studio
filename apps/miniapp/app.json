@@ -1,0 +1,52 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/schedule/index",
+    "pages/students/index",
+    "pages/ledger/index",
+    "pages/lesson/index",
+    "pages/catalog/index",
+    "pages/choose/index",
+    "pages/classes/index",
+    "pages/series/index",
+    "pages/manage-lesson/index",
+    "pages/resource/index",
+    "pages/account/index",
+    "pages/members/index",
+    "pages/imports/index",
+    "pages/leaves/index",
+    "pages/payroll/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "课间",
+    "navigationBarBackgroundColor": "#f2f2f7",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f2f2f7"
+  },
+  "tabBar": {
+    "color": "#636366",
+    "selectedColor": "#007aff",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "工作台"
+      },
+      {
+        "pagePath": "pages/schedule/index",
+        "text": "课程"
+      },
+      {
+        "pagePath": "pages/students/index",
+        "text": "学员"
+      },
+      {
+        "pagePath": "pages/ledger/index",
+        "text": "课时账本"
+      }
+    ],
+    "borderStyle": "white"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
