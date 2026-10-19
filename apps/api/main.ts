@@ -1,0 +1,22 @@
+import { openDatabase } from './db.ts';
+import { seedDemo } from './seed.ts';
+import { StudioService } from './service.ts';
+import {IdentityService} from './identity.ts';
+import {wechatProvider} from './wechat-login.ts';
+import { createApp } from './server.ts';
+import { mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+if(existsSync('.env'))process.loadEnvFile('.env');
+if(process.env.NODE_ENV==='production')throw new Error('当前版本使用本机体验登录，尚未支持生产部署。');
+const dir=process.env.DATA_DIR??'.data/studio';
+if(!process.env.DATABASE_URL)await mkdir(dir,{recursive:true});
+const db=await openDatabase(dir,process.env.DATABASE_URL);
+await seedDemo(db);
+const provider=process.env.WECHAT_APP_ID&&process.env.WECHAT_APP_SECRET?wechatProvider(process.env.WECHAT_APP_ID,process.env.WECHAT_APP_SECRET):undefined;
+const app=await createApp(new StudioService(db,new IdentityService(db,provider,process.env.DEMO_LOGIN!=='false')));
+const port=Number(process.env.PORT??4310);
+await app.listen(port,'127.0.0.1');
+console.log(`课间 API 已启动：http://127.0.0.1:${port}/api（本机持久化；请在微信开发者工具中打开 dist/miniapp）`);
+let closing=false;
+async function close(){if(closing)return;closing=true;await app.close();await db.close();}
+process.on('SIGINT',()=>void close());process.on('SIGTERM',()=>void close());
