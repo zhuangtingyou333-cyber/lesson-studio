@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="title">周期排课</view><view class="subtitle">先核对每一节课，再整批保存</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{!ready || !owner}}" class="notice">请使用机构管理员身份排课。</view>
+  <block wx:else>
+    <view wx:if="{{!classes.length}}" class="card"><view class="muted">先建立班级、选择老师并添加学员。</view><button bindtap="classes">管理班级</button></view>
+    <form wx:else id="series-form" class="card" bindsubmit="previewSchedule">
+      <view class="label">班级</view><picker range="{{classes}}" range-key="name" value="{{classIndex}}" data-key="classIndex" bindchange="pick" disabled="{{busy}}"><view class="picker">{{classes[classIndex].name}}</view></picker>
+      <view class="muted">{{classes[classIndex].teacher_name}} · {{classes[classIndex].room}} · {{classes[classIndex].member_ids.length}}位学员</view>
+      <view class="label">开始日期（北京时间）</view><picker mode="date" value="{{startDate}}" data-key="startDate" bindchange="pick" disabled="{{busy}}"><view class="picker">{{startDate}}</view></picker>
+      <view class="label">结束日期（包含当天）</view><picker mode="date" value="{{endDate}}" data-key="endDate" bindchange="pick" disabled="{{busy}}"><view class="picker">{{endDate}}</view></picker>
+      <view class="label">每周上课日</view><checkbox-group id="series-weekdays" bindchange="daysChanged" class="weekdays"><label wx:for="{{days}}" wx:key="value"><checkbox value="{{item.value}}" checked="{{item.selected}}" disabled="{{busy}}" color="#007aff"/>{{item.label}}</label></checkbox-group>
+      <view class="label">上课时间</view><picker mode="time" value="{{time}}" data-key="time" bindchange="pick" disabled="{{busy}}"><view class="picker">{{time}}</view></picker>
+      <view class="label">排除日期（选填）</view><textarea id="series-exclusions" name="excludeDates" value="{{excludeDates}}" maxlength="4000" placeholder="如2026-10-01，每行一个或用逗号分隔" bindinput="exclusionsChanged" disabled="{{busy}}"/>
+      <view class="notice">一次最多60节、日期范围最多366天。按当前班级名单预约，不提前扣课，也不冻结课时。后续余额变化可能影响到课扣课。</view>
+      <button id="series-preview" form-type="submit" loading="{{busy}}" disabled="{{busy}}">预览全部课次</button>
+    </form>
+    <view wx:if="{{preview}}">
+      <view class="spacer card-title">{{preview.className}} · 共{{preview.occurrences.length}}节</view>
+      <view class="notice">每节{{preview.studentCount}}人 · {{preview.teacherName}} · {{preview.room}}。{{preview.canCommit?'全部课次可安排；保存时会再次核对。':'存在冲突，本批不会部分保存。请调整后重新预览。'}}</view>
+      <view wx:for="{{preview.occurrences}}" wx:key="date" class="card"><view class="row"><view class="card-title">{{item.date}} {{preview.input.time}}</view><text class="pill">{{item.conflicts.length?'待处理':'可安排'}}</text></view><view wx:for="{{item.conflicts}}" wx:for-item="conflict" wx:key="*this" class="error">{{conflict}}</view></view>
+      <button id="series-commit" bindtap="commit" disabled="{{busy || !preview.canCommit}}" loading="{{busy}}">确认安排全部{{preview.occurrences.length}}节</button>
+    </view>
+    <view wx:if="{{result}}" class="card"><view class="card-title">排课完成</view><view>{{result}}</view><button bindtap="courses">查看课程</button></view>
+  </block>
+</view>
