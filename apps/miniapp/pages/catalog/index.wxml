@@ -1,0 +1,14 @@
+<view class="page"><view class="title">课程、课包与教室</view><view class="subtitle">维护资料，保留每一笔历史</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view><view wx:if="{{!owner}}" class="notice">机构资料由管理员负责。</view>
+  <block wx:else>
+    <view class="actions"><button id="new-course" class="small" data-kind="course" bindtap="edit">新增课程</button><button id="new-package" class="small secondary" data-kind="package" bindtap="edit">新增课包</button><button id="new-room" class="small secondary" data-kind="room" bindtap="edit">新增教室</button></view>
+    <button class="secondary small" bindtap="filter">{{showArchived?'隐藏归档 / 停用':'显示归档 / 停用'}}</button>
+    <view class="spacer card-title">开设课程</view>
+    <block wx:for="{{courses}}" wx:key="id"><view wx:if="{{showArchived || item.active}}" class="card"><view class="row"><view class="card-title grow">{{item.name}}</view><text class="pill">{{item.active?'使用中':'已归档'}}</text></view><view class="muted">{{item.duration}}分钟 / 课</view><button class="small secondary" data-kind="course" data-id="{{item.id}}" bindtap="edit">维护课程</button></view></block>
+    <view class="spacer card-title">课费包</view>
+    <block wx:for="{{packages}}" wx:key="id"><view wx:if="{{showArchived || item.active}}" class="card"><view class="row"><view class="card-title grow">{{item.name}}</view><text class="pill">{{item.active?'¥'+item.amount:'已归档'}}</text></view><view>{{item.quantity}}次，赠{{item.bonus}}次</view><view class="muted">{{item.courseName}} · 开通后{{item.valid_days}}天有效 · 版本{{item.version}}</view><button class="small secondary" data-kind="package" data-id="{{item.id}}" bindtap="edit">维护课包</button></view></block>
+    <view class="spacer card-title">教室</view>
+    <block wx:for="{{rooms}}" wx:key="id"><view wx:if="{{showArchived || item.active}}" class="card"><view class="row"><view class="card-title grow">{{item.name}}</view><text class="pill">{{item.active?'可使用':'已停用'}}</text></view><view class="muted">容量{{item.capacity}}人 · {{item.upcoming}}节未结束课程</view><button class="small secondary" data-kind="room" data-id="{{item.id}}" bindtap="edit">维护教室</button></view></block>
+    <view wx:if="{{!rooms.length}}" class="notice">请先创建教室，再安排课程和班级。</view>
+  </block>
+</view>
