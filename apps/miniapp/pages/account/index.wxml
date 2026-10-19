@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="title">账号与机构</view><view class="subtitle">一个微信账号，进入你所属的机构</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view><view wx:if="{{result}}" class="notice">{{result}}</view>
+  <block wx:if="{{!ready}}">
+    <view class="card"><view class="card-title">登录课间</view><view class="muted">加入老师团队，或查看孩子的课程与课时。</view><button wx:if="{{wechatLogin}}" id="wechat-login" bindtap="signIn" disabled="{{busy}}" loading="{{busy}}">微信登录</button><view wx:else class="notice">正式微信登录尚未配置，当前仅支持本机体验。</view></view>
+    <view wx:if="{{demoLogin}}" class="card"><view class="card-title">新成员体验</view><view class="muted">两个独立的合成账号，可体验申请加入和管理员核对流程。</view><button id="visitor-login" data-persona="visitor" bindtap="signIn" disabled="{{busy}}">体验新成员甲</button><button class="secondary" data-persona="visitor2" bindtap="signIn" disabled="{{busy}}">体验新成员乙</button></view>
+  </block>
+  <block wx:else>
+    <view class="card row"><view class="grow"><view class="card-title">{{name}}</view><view class="muted">已登录</view></view><button class="secondary small" bindtap="signOut" disabled="{{busy}}">退出登录</button></view>
+    <view class="section-label">我的机构</view><view wx:if="{{!memberships.length}}" class="empty">尚未加入机构，输入邀请口令，或创建自己的机构</view>
+    <view wx:if="{{memberships.length}}" class="group"><button wx:for="{{memberships}}" wx:key="tenant_id" class="nav-row" data-id="{{item.tenant_id}}" bindtap="select" disabled="{{busy || !item.active}}"><view class="grow">{{item.tenant_name}}<text class="nav-detail">{{item.roleLabel}} · {{item.active?'点击进入':'成员资格已停用'}}</text></view><text class="chevron">›</text></button></view>
+    <view class="section-label">接受邀请</view>
+    <form id="claim-form" class="card" bindsubmit="claim"><view class="label">邀请口令</view><input name="token" maxlength="64" placeholder="粘贴管理员提供的口令" disabled="{{busy}}"/><view class="label">你的姓名</view><input name="displayName" maxlength="80" placeholder="便于管理员核对" disabled="{{busy}}"/><view class="label">身份或与学员的关系</view><input name="relationship" maxlength="300" placeholder="例如：小禾的母亲 / 素描老师" disabled="{{busy}}"/><view class="muted spacer">提交后需要管理员核对。通过前不会显示学员资料。</view><button form-type="submit" disabled="{{busy}}" loading="{{busy}}">提交加入申请</button></form>
+    <block wx:if="{{claims.length}}"><view class="section-label">申请进度</view><view wx:for="{{claims}}" wx:key="id" class="card"><view class="card-title">{{item.tenant_name}}</view><view>{{item.label}}</view><view wx:if="{{item.decision_reason}}" class="muted">{{item.decision_reason}}</view></view><button class="secondary" bindtap="refresh" disabled="{{busy}}">刷新申请进度</button></block>
+    <view class="section-label">我是机构负责人</view><form id="institution-form" class="card" bindsubmit="create"><view class="label">机构名称</view><input name="name" maxlength="80" placeholder="例如：青禾艺术工作室" disabled="{{busy}}"/><button class="secondary" form-type="submit" disabled="{{busy}}">创建机构</button></form>
+  </block>
+</view>
